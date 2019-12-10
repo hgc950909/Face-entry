@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FaceEntry</title>
+    <script src="https://code.jquery.com/jquery-1.12.3.min.js"></script>
+	  <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="/__/firebase/6.3.1/firebase-app.js"></script>
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#reserved-urls -->
+    <!-- Initialize Firebase -->
+    <script src="/__/firebase/init.js"></script>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/6.3.1/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/6.3.1/firebase-auth.js"></script>
+    <script defer src="/__/firebase/6.3.1/firebase-database.js"></script>
+    <script defer src="/__/firebase/6.3.1/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/6.3.1/firebase-storage.js"></script>
+    <!-- initialize the SDK after all desired features are loaded -->
+    <script defer src="/__/firebase/init.js"></script>
+    <script src="js/load-image.all.min.js"></script>
+ <!--Import Google Icon Font-->
+ <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+ <!--Let browser know website is optimized for mobile-->
+   <style>
+     ::-webkit-scrollbar {
+         display:none;
+     }
+     .collection { cursor: pointer;}
+     .filebox label {
+          display: inline-block;
+          padding: .5em .75em;
+          color: #fff;
+          font-size: inherit;
+          line-height: normal;
+          vertical-align: middle;
+          background-color: #5cb85c;
+          cursor: pointer;
+          border: 1px solid #4cae4c;
+          border-radius: .25em;
+          -webkit-transition: background-color 0.2s;
+          transition: background-color 0.2s;
+        }
+    .filebox label:hover {
+          background-color: #6ed36e;
+      }
+    .filebox label:active {
+      background-color: #367c36;
+    }
+    .filebox input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+    tr:hover{
+      background-color:gray;
+      cursor:pointer;
+    }
+    .active {background:gray;}
+    #myProgress {
+    position: relative;
+    width: 100%;
+    height: 30px;
+}
+#myBar {
+    position: relative;
+    width: 0.5%;
+    height: 100%;
+    background-color: green;
+    text-align: center; /* To center it horizontally (if you want) */
+    line-height: 30px; /* To center it vertically */
+    color: white; 
+}
+
+   </style>
+  </head>
+  <body >
+
+      <div data-role="page" id="page1" >
+          <div data-role="header" style="background-color: white">
+            <h1 style="font-size:20px;">FaceEntry</h1>
+            <div data-role="navbar"data-tap-toggle="true" class="ui-body-a">
+              <ul>
+                  <li> <a href="#page1" data-role="button"  onclick="page1_clear()">Register</a></li>
+                  <li> <a href="#page2" data-role="button"  onclick="page2_clear()">Verify</a></li>
+              </ul>
+            </div>
+          </div><!--header-->
+          <div data-role="content" >
+
+
+              <div data-role="popup" id="registerPopup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style=" width: 300px;height:100px; margin: 0 auto">
+                      <div role="main" class="ui-content">
+                          <h3 id="register_text" style="text-align: center"></h3>
+                           <a href="#" id="register_close" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right" data-rel="back" >Cancel</a>
+                     </div>
+            </div>
+
+            <div data-role="popup" id="deletePopup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style=" width: 300px;height:150px; margin: 0 auto">
+                    <div role="main" class="ui-content">
+                        <h3 id="delete_text" style="text-align: center"></h3>
+                           <a href="#" id="delete_close" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right" data-rel="back" >Cancel</a>
+                            <a href="#" onclick="deletepush()" id="delete_check" style ="display:none"class="ui-btn ui-corner-all ui-shadow ui-btn-inline ui-btn-b" data-rel="back" >Delete</a>
+                   </div>
+          </div>
+          
+
+
+
+              <form name = "inputregister" method= "POST" enctype = "multipart/form-data">
+                <p>
+                  <label>NAME
+                    <input id = "username" type="text" name ="name" size="10"placeholder="Name">
+                  </label>
+                  <label>ID
+                      <input id = "ID" type="number" name="ID"placeholder="ID">
+                  </label>
+                </p>
+                <img id="registerimage" style = "display: none; height:200px;  border:0; outline:none; margin: 0 auto"/>
+                <div class="filebox">
+                  <label for="imageinput" >SELECT</label>
+                  <input type="file"  style ="display:none" accept="image/*" onchange="loadFile(event)" id = "imageinput" class ="file_input">
+                </div>
+               
+              </form>
+              <div data-role="collapsible" id="my_user"> 
+                <h3>User</h3>
+                <table data-role="table"  data-mode= "reflow" class="ui-responsive" id="usertable" ><!--user data table--->
+                    <thead>
+                        <tr>
+                          <th data-priority = "1">NAME</th>           
+                         <th data-priority = "2">USERID</th>  
+                         <th data-priority = "3">USERIMAGE</th>           
+                        </tr>
+                     </thead>
+                     <tbody id="list">
+                       <tr>
+                       </tr>
+                     </tbody>
+                </table><!--user data table--->
+              </div>
+          </div>
+          <div data-role="footer" data-tap-toggle="false" data-position="fixed"  >
+              <div data-role="navbar" data-tap-toggle="false" class="ui-body-a">
+                  <ul>
+                      <li><a href="#registerPopup"  data-rel="popup" data-icon="plus" onclick="registerpush()" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline  ui-btn-icon-center ui-btn-a">Register</a></li>
+                      <li><a href="#deletePopup"  data-rel="popup" data-icon="minus" onclick="deleteuser()" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline  ui-btn-icon-center ui-btn-a">Delete</a></li>
+                     
+                    </ul>
+              </div>
+            </div>
+        </div>
+        <!---page2--------------------------------------------------------------------------------------------------------------------------------------->
+        <div data-role="page" id="page2">
+            <div data-role="header" style="background-color: white">
+              <h1 style="font-size:20px">FaceEntry </h1>
+              <div data-role="navbar"data-tap-toggle="false" class="ui-body-a">
+                  <ul>
+                      <li> <a href="#page1" data-role="button"  onclick="page1_clear()">Register</a></li>
+                      <li> <a href="#page2" data-role="button"  onclick="page2_clear()">Verify</a></li>
+                  </ul>
+                </div>
+            </div><!--header-->
+            <div data-role="content">  
+
+
+                <div data-role="popup" id="verifyPopup" data-overlay-theme="b" data-theme="b" data-dismissible="false" style=" width: 300px;height:150px; margin: 0 auto">
+                        <div role="main" class="ui-content">
+                            <h3 id="verify_text" style="text-align: center"></h3>
+                            <div id="myBar" style="display: none">0%</div>
+                            <a href="#" id="verify_close" class="ui-btn ui-corner-all ui-shadow ui-btn-b ui-icon-delete ui-btn-icon-notext ui-btn-right" data-rel="back" style="display: none">Cancel</a>
+                         </div>
+                    </div>
+
+
+
+              <form name = "inputverify" enctype = "multipart/form-data">
+                <img id="verifyimage" style="display: none; height:200px;  margin: 0 auto"/>
+                  <div class="filebox" style="margin: 20px">
+                     <label for="camerainput">CAMERA</label>
+                    <input type="file" style ="display:none" accept="image/*;capture=camera "onchange="loadFile(event)"  id="camerainput" name ="imageURL">
+                  </div>
+               </form>
+               <h2 id="matchtitle" style="text-align: center"></h2>
+               <img id="matchimage" style="display: none; height :200px; margin: 0 auto ">
+               <h3 id="matchingname" style="text-align: center"></h3>
+               <h3 id="matchingid" style="text-align: center"></h3>
+               <h3 id="registerdate" style="text-align: center"></h3>
+               <h3 id="matchingcolor" style="text-align: center"></h3>
+            </div>
+
+            <div data-role="footer" data-tap-toggle="false" data-position="fixed">
+                <div data-role="navbar" class="ui-body-a">
+                    <ul>
+                        <li><a href="#verifyPopup"  data-rel="popup" data-icon="search" onclick="verifypush()" data-position-to="window" data-transition="pop" class="ui-btn ui-corner-all ui-shadow ui-btn-inline  ui-btn-icon-center ui-btn-a">Verify</a></li>
+                        <li><a href="#" data-role="button" data-icon="refresh" onclick="location.reload()">Refresh</a></li>
+                      </ul>
+                </div>
+              </div>
+          </div>  
+
+          
+          
+          
+    <script>
+//----------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
+        $('#page1').bind('pageinit', function(){init()});
+        //refresh user info table
+        function init(){
+                userlist().then(function(){
+                  $("#usertable" ).table( "refresh" );
+                })
+            }
+        //Load userdata from database 
+        function userlist(){
+          return new Promise(function(resolve,reject){
+            firebase.database().ref('user/').once('value').then(function(snapshot){
+              snapshot.forEach(function(childSnapshot){
+                var compareuser = childSnapshot.val();
+                $("#usertable tbody").append("<tr id="+compareuser.userID+"><td>"+compareuser.username+"</td><td>"+compareuser.userID+"</td><td><img src='"+compareuser.userImageURL+"'height='100px'></td></tr>");
+              });
+            }).then(function(){resolve()});
+        });
+        }
+       //Select user in table   
+       var deletename,deleteID;
+        $("#usertable tbody").on('click','tr',function(){
+            var selected = $(this).hasClass("active");
+            $("#usertable tr").removeClass("active");
+            if(!selected){
+              $(this).addClass("active");
+            }
+            var data = $(this).children("td").map(function(){
+              return $(this).text();
+            }).get();
+            deletename=data[0].split('NAME')[1];
+            deleteID=data[1].split('USERID')[1];
+        });
+        //Delete user info
+        function deleteuser(){
+          if(deleteID ==undefined || deletename == undefined){
+            document.getElementById("deletePopup").style.height="100px";
+            document.getElementById("delete_text").innerHTML="Select User";
+            document.getElementById("delete_check").style.display="none";
+            return;
+          }
+          document.getElementById("deletePopup").style.height="150px";
+          document.getElementById("delete_text").innerHTML="Delete this user?<br>Name : "+ deletename+"  ID : "+ deleteID;
+          document.getElementById("delete_check").style.display="inline"
+         }
+         function deletepush(){
+          var database = firebase.database().ref('user/'+deleteID);
+              database.remove().then(function(){
+                $(document).ready(function(){ 
+                  $('#'+deleteID).remove(); 
+                });
+              }).then(function(){
+                $("#usertable" ).table( "refresh" );
+                document.getElementById("delete_text").innerHTML="Delete finished";
+                deletename=undefined;
+                deleteID=undefined;
+              });
+              var storageRef = firebase.storage().ref();
+              var desertRef = storageRef.child('images/'+deletename+deleteID);
+              desertRef.delete().then(function() {
+                  console.log("storage data removed")
+                }).catch(function(error) {
+                  console.log("error.storage data not removed.")
+                });
+         }
+        //When register button push
+        function registerpush(){
+           var name = document.inputregister.name.value;
+           var ID = document.inputregister.ID.value;
+           if(name=="" || ID ==""){
+             document.getElementById("register_text").innerHTML="Not enough information";
+      
+             return;
+            }
+          document.getElementById("register_text").innerHTML="Start register...";
+          readwritefile(name,ID);   
+        }
+        //Write user info to database, storage
+        function readwritefile(name,ID){
+          const file = registerblob;
+           if(file == undefined){
+            document.getElementById("register_text").innerHTML="No image";
+         
+              return;
+           }   
+           $.mobile.loading( "show" );
+           var storageRef = firebase.storage().ref();
+           var spaceRef = storageRef.child('images/'+name+ID);
+           var uploadTask =spaceRef.put(file);
+           var database = firebase.database().ref('user/'+ID);
+           uploadTask.on('state_changed',null,null, function(snapshot){
+              uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+                var date =new Date();
+                var now = date.getFullYear()+"."+date.getMonth()+"."+date.getDate();
+                database.set(
+                {
+                  username : name,
+                  userID:ID,
+                  userImageURL: downloadURL,
+                  useregisterdate:now
+                }).then(function(){
+                  $("#list").append("<tr id="+ID+"><td>"+name+"</td><td>"+ID+"</td><td><img src='"+downloadURL+"'height='100px'></td></tr>");
+                }).then(function(){
+                  $("#usertable" ).table( "refresh" );
+                  $.mobile.loading( "hide" );
+                  document.getElementById("register_text").innerHTML="Register success";
+                  document.inputregister.name.value="";
+                  document.inputregister.ID.value="";
+                  registerblob=undefined;
+                  var image=document.getElementById("registerimage");
+                  image.src=undefined;
+                  image.style.display="none";
+                 });
+                }); 
+            });
+         } 
+       //Load image on screen
+     
+var registerblob,verifyblob;
+    
+       function loadFile(event){
+          var temp;
+          if(event.target.id == "imageinput"){
+              temp = "registerimage";
+          }
+          else if(event.target.id == "camerainput"){
+            temp = "verifyimage";
+          }
+          var output = document.getElementById(temp);
+          var file = event.target.files[0];
+
+         loadImage.parseMetaData(file, function(data) {
+              //default image orientation
+              var orientation = 0;
+              //if exif data available, update orientation
+              if(file){
+                var type = file.type;
+              }
+              if (data.exif) {
+                  orientation = data.exif.get('Orientation');
+              }
+              //Modify the image as appropriate.
+              //Size and Orientation.
+              var loadingImage = loadImage(file,function(canvas) {
+                var base64data = canvas.toDataURL(type);
+                  var img_src = base64data.replace(/^data\:image\/\w+\;base64\,/, '');
+                  output.style.display='block';           
+                  $('#'+temp+'').attr('src', base64data);
+                  var block = base64data.split(';');
+                  var contentType = block[0].split(':')[1];
+                  var blob = base64ToBlob(img_src, contentType);
+                  if(temp=="registerimage"){
+                    registerblob=blob;
+                  }
+                  else if(temp=="verifyimage"){
+                    verifyblob=blob;
+                  }
+                },{
+                    canvas: true,
+                    orientation: orientation,
+                    maxWidth: 800
+                  }           
+              );
+          });
+        };
+        //base64->blob decoding
+        var base64ToBlob = function(base64Data, contentType) {
+            sliceSize =  512;
+            var byteCharacters = atob(base64Data);
+            var byteArrays = [];
+            for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+                var slice = byteCharacters.slice(offset, offset + sliceSize);
+                var byteNumbers = new Array(slice.length);
+                for (var i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                var byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            var blob = new Blob(byteArrays, { type: contentType });
+            return blob;
+        }
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+   //global variable
+    var check,notsurememname,notsurememimage,notsurememdate,notsurememID,matchname,matchID,matchdate,matchimage,matchnum,width;
+   //When push verify button
+   function verifypush(){ 
+    var elem = document.getElementById("myBar")
+    elem.style.display="none";
+    elem.style.width = 1 + '%'; 
+    elem.innerHTML="0";
+    document.getElementById("verify_close").style.display="none";
+      check="undefined";
+      matchnum=0;
+      width = 0;
+       var file = verifyblob;
+       if(file == undefined){
+        document.getElementById("verify_text").innerHTML="No image";
+        document.getElementById("verifyPopup").style.height="100px";
+        document.getElementById("verify_close").style.display="block";
+        return;
+       }
+       document.getElementById("verify_text").innerHTML="Verifying image...";
+       document.getElementById("verifyPopup").style.height="150px";
+       $.mobile.loading( "show" );
+       var verifyURL;
+       var storageRef = firebase.storage().ref();
+           var spaceRef = storageRef.child('images/temp');
+           var uploadTask =spaceRef.put(file);
+           uploadTask.on('state_changed',null,null, function(snapshot){
+                uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL){
+                  verifyURL=downloadURL;
+                  getDatabase(verifyURL).then(function(){
+                    document.getElementById("verify_close").style.display="block";
+                    document.getElementById("verify_text").innerHTML="Verifying finished";
+                    writeResult();
+                  }).catch(function(){
+                    document.getElementById("verify_text").innerHTML="Error Occur";
+                    document.getElementById("verify_close").style.display="block";
+                    document.getElementById("verifyPopup").style.height="100px";
+                    elem.style.display="none";
+                  })
+                });
+          });
+        }
+        //Bring images from database
+      function getDatabase(verifyURL){
+        return new Promise(function(resolve,reject){
+          var database = firebase.database().ref('user/');
+            database.once('value').then(function(snapshot){
+              var num = snapshot.numChildren();
+              var cnt = 100/num;
+              var elem = document.getElementById("myBar");   
+              elem.style.display="block";
+              snapshot.forEach(function(childSnapshot){
+              var compare_user = childSnapshot.val();
+              comparerequest(compare_user.userID,compare_user.username,compare_user.useregisterdate,compare_user.userImageURL,verifyURL).then(function(){
+                $.mobile.loading( "hide" );
+                 width+= cnt;
+                elem.style.width = width + '%'; 
+                elem.innerHTML = parseInt(width) * 1 + '%';
+                if(--num==0){
+                  resolve();
+                }
+              }).catch(function(){
+                reject();
+              });
+            });
+          });
+         });
+        }
+        //Request to server to verify
+      function comparerequest(ID,name,date,imageURL,verifyURL){
+        return new Promise(function(resolve,reject){
+          if(check == "YES"){
+            resolve();
+          }
+          var form = new FormData();
+          form.append("url1", imageURL);
+          form.append("url2", verifyURL);
+
+          var settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": "https://192.168.0.38/cgi-bin/f9.py",
+            "method": "POST",
+            "processData": false,
+            "contentType": false,
+            "mimeType": "multipart/form-data",
+            "data": form
+          }
+
+          $.ajax(settings).done(function (res) {
+            if(res==""){
+              alert("Something wrong.\nNo result ");
+              $.mobile.loading( "hide" );
+              return;
+            }
+            var splitstr = res.split(",");
+            var result = splitstr[0].substring(8);
+            var distance = splitstr[1].substring(10);
+            var tolerance = splitstr[2].substring(11,15);
+            console.log(name+ " " + result + " " + distance)
+            if(result == "1"){
+              matchnum++;
+              if(matchnum>1){
+                alert("More than one person matched")
+                $.mobile.loading( "hide" );
+                return;
+              }
+              matchname = name;
+              matchID = ID;
+              matchimage= imageURL;
+              matchdate=date;
+              check="YES";
+              resolve();
+            }
+            else{
+              if(check== "NO" || check=="undefined"){
+                if(distance<0.53){
+                  check="NOTSURE";
+                  notsurememID=ID;
+                  notsurememname=name;
+                  notsurememimage=imageURL;
+                  notsurememdate=date;
+                  resolve();
+                }
+                else{
+                  check="NO";
+                  resolve();
+                }
+              }
+              resolve();
+            }
+          }).fail(function(xhr, status, errorThrow){
+            $("#text").html("error occured.<br>")
+            .append("status: " + status);
+            $.mobile.loading( "hide" );
+            reject();
+          })
+        });
+       }
+        //Compare two image
+        function writeResult(){
+          if(check =="NO"){
+              update("No Matching","","","red","");
+              var getElementBYIDmatchimage= document.getElementById('matchimage');
+              getElementBYIDmatchimage.src = "";
+              getElementBYIDmatchimage.style.display="none";
+           }
+          else if(check =="NOTSURE"){
+              update("Not Sure","Name: "+notsurememname,"ID: "+notsurememID,'orange',"Date Registered: " + notsurememdate);
+              var getElementBYIDmatchimage= document.getElementById('matchimage');
+              getElementBYIDmatchimage.src = notsurememimage;
+              getElementBYIDmatchimage.style.display="block";
+           }
+           else if(check=="YES"){
+              update("Match User Info","Name: "+matchname,"ID: "+matchID,'green',"Date Registered: " + matchdate);
+              var getElementBYIDmatchimage= document.getElementById('matchimage');
+              getElementBYIDmatchimage.src = matchimage;
+              getElementBYIDmatchimage.style.display="block";
+           }
+           $.mobile.loading( "hide" );
+           verifyblob=undefined;
+        }
+        function page2_clear(){
+          var element = document.getElementById('verifyimage');
+          element.src = "";
+          element.style.display="none";
+          update("","","","","")
+          $("#camerainput").val("");
+          var getElementBYIDmatchimage= document.getElementById('matchimage');
+          getElementBYIDmatchimage.src = "";
+          getElementBYIDmatchimage.style.display="none";
+          verifyblob=undefined;
+        }
+        function page1_clear(){
+          var element = document.getElementById('registerimage');
+          element.src = "";
+          $("#imageinput").val("");
+          element.style.display="none";
+          document.inputregister.name.value = "";
+          document.inputregister.ID.value = "";
+          registerblob=undefined;     
+        }
+        function update(title,name,id,color,date){
+          document.getElementById('matchtitle').innerHTML=title;
+          document.getElementById('matchingname').innerHTML= name;
+          document.getElementById('matchingid').innerHTML= id;
+          document.getElementById('matchingcolor').style.background=color;
+          document.getElementById('matchingcolor').innerHTML=color;
+          document.getElementById('registerdate').innerHTML=date;
+        }
+    </script>
+  </body>
+</html>
